@@ -1,0 +1,13 @@
+{
+  "name": "orphaned-resource-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "func start",
+    "build": "echo \"No build step\""
+  },
+  "dependencies": {
+    "@azure/arm-resourcegraph": "^4.2.1",
+    "@azure/identity": "^4.0.0"
+  }
+}
