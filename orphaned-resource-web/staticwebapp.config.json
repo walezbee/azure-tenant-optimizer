@@ -1,0 +1,9 @@
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "rewrite": "https://orphaned-backend-func.azurewebsites.net/api/*",
+      "allowedRoles": ["anonymous", "authenticated"]
+    }
+  ]
+}
