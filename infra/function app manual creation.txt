@@ -1,0 +1,120 @@
+<<<<<<<<<<<<<<<Import the Existing Resource Group into Terraform>>>>>>>>>>>>>>>
+terraform import azurerm_resource_group.rg /subscriptions/59452154-348f-46b7-b159-aec055b5784e/resourceGroups/rg-orphaned-resources
+<<<<<<<<<<<<<<<Bash>>>>>>>>>>>>>>>
+Create Azure Function App
+az group create --name rg-orphaned-resources --location westeurope
+
+az storage account create \
+  --name orphanedfuncstorage \
+  --location westeurope \
+  --resource-group rg-orphaned-resources \
+  --sku Standard_LRS
+
+az functionapp plan create \
+  --name orphaned-plan \
+  --resource-group rg-orphaned-resources \
+  --location westeurope \
+  --number-of-workers 1 \
+  --sku Y1 \
+  --is-linux
+
+az functionapp create \
+  --name orphaned-backend-func \
+  --storage-account orphanedfuncstorage \
+  --resource-group rg-orphaned-resources \
+  --plan orphaned-plan \
+  --runtime node \
+  --runtime-version 22 \
+  --functions-version 4
+
+Enable system-assigned identity to the Function App
+az functionapp identity assign \
+  --name orphaned-backend-func \
+  --resource-group rg-orphaned-resources
+
+Grant Reader permission to the Function App at Subscription Level
+az role assignment create \
+  --assignee <IDENTITY_PRINCIPAL_ID> \
+  --role "Reader" \
+  --scope /subscriptions/<subscription-id>
+
+Verify the Function App Identity
+az functionapp identity show \
+  --name orphaned-backend-func \
+  --resource-group rg-orphaned-resources
+=======================================================================================
+az group create --name rg-orphaned-resources --location westeurope
+
+az storage account create --name orphanedfuncstorage --location westeurope --resource-group rg-orphaned-resources --sku Standard_LRS
+
+az functionapp plan create --name orphaned-plan --resource-group rg-orphaned-resources --location westeurope --number-of-workers 1 --sku Y1 --is-linux
+
+az functionapp create --name orphaned-backend-func --storage-account orphanedfuncstorage --resource-group rg-orphaned-resources --plan orphaned-plan --runtime node --runtime-version 22 --functions-version 4
+
+az functionapp identity assign --name orphaned-backend-func --resource-group rg-orphaned-resources
+
+az role assignment create --assignee b3bbca6e-6cdc-410d-b1c2-322869e23411 --role "Reader" --scope /subscriptions/59452154-348f-46b7-b159-aec055b5784e
+
+az functionapp identity show --name orphaned-backend-func --resource-group rg-orphaned-resources
+
+az functionapp identity show --name orphaned-backend-func --resource-group rg-orphaned-resources
+=======================================================================================
+
+
+<<<<<<<<<<<<<<<PowerShell>>>>>>>>>>>>>>>
+# Set variables
+$resourceGroupName = "rg-orphaned-resources"
+$location = "westeurope"
+$storageAccountName = "orphanedfuncstorage"
+$planName = "orphaned-plan"
+$functionAppName = "orphaned-backend-func"
+$subscriptionId = "<subscription-id>"  # Replace with your actual subscription ID
+
+# Create Resource Group
+az group create --name $resourceGroupName --location $location
+
+# Create Storage Account
+az storage account create `
+  --name $storageAccountName `
+  --location $location `
+  --resource-group $resourceGroupName `
+  --sku Standard_LRS
+
+# Create Function App Plan (Consumption Plan on Linux)
+az functionapp plan create `
+  --name $planName `
+  --resource-group $resourceGroupName `
+  --location $location `
+  --number-of-workers 1 `
+  --sku Y1 `
+  --is-linux
+
+# Create the Function App
+az functionapp create `
+  --name $functionAppName `
+  --storage-account $storageAccountName `
+  --resource-group $resourceGroupName `
+  --plan $planName `
+  --runtime node `
+  --runtime-version 22 `
+  --functions-version 4
+
+# Enable system-assigned managed identity
+$identityInfo = az functionapp identity assign `
+  --name $functionAppName `
+  --resource-group $resourceGroupName `
+  --query principalId `
+  --output tsv
+
+# Assign Reader role at the subscription scope
+az role assignment create `
+  --assignee $identityInfo `
+  --role "Reader" `
+  --scope "/subscriptions/$subscriptionId"
+
+# Verify the Function App Identity
+az functionapp identity show `
+  --name $functionAppName `
+  --resource-group $resourceGroupName
+
+

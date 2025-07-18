@@ -1,0 +1,5 @@
+resource_group_name = "rg-orphaned-resources"
+location      = "West Europe"
+app_name      = "orphaned-resource-web"
+aad_client_id = "2bed0b07-e8ff-4333-9c8b-2aa020872e2d"       
+aad_tenant_id = "36d8a1ac-8d2d-4744-b032-9074fd822ec5"       
