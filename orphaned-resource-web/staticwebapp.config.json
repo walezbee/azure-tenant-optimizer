@@ -4,6 +4,27 @@
       "route": "/api/*",
       "rewrite": "https://orphaned-backend-func.azurewebsites.net/api/*",
       "allowedRoles": ["anonymous", "authenticated"]
+    },
+    {
+      "route": "/.auth/login/aad",
+      "statusCode": 200
+    },
+    {
+      "route": "/.auth/logout",
+      "statusCode": 200
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html"
     }
-  ]
+  ],
+  "auth": {
+    "identityProviders": {
+      "azureActiveDirectory": {
+        "registration": {
+          "openIdIssuer": "https://login.microsoftonline.com/common/v2.0"
+        }
+      }
+    }
+  }
 }

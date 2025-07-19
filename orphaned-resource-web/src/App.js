@@ -11,17 +11,16 @@ const msalConfig = {
 function App() {
   const msalInstance = new PublicClientApplication(msalConfig);
 
-  const login = async () => {
-    await msalInstance.loginPopup();
-    console.log("Logged in!");
-  };
+ const handleLogin = () => {
+  window.location.href = '/.auth/login/aad';
+};
 
-  return (
-    <div>
-      <h1>Orphaned Resource Scanner</h1>
-      <button onClick={login}>Login with Azure AD</button>
-    </div>
-  );
+return (
+  <div>
+    <h1>Orphaned Resource Scanner</h1>
+    <button onClick={handleLogin}>Login with Azure AD</button>
+  </div>
+);
 }
 
 export default App;
