@@ -1,15 +1,51 @@
-const { DefaultAzureCredential } = require("@azure/identity");
-const { ResourceGraphClient } = require("@azure/arm-resourcegraph");
+const axios = require("axios");
+const jwt = require("jsonwebtoken");
 
 module.exports = async function (context, req) {
-  const credential = new DefaultAzureCredential();
-  const client = new ResourceGraphClient(credential);
+  const authHeader = req.headers["authorization"];
 
-  const query = `Resources | where type =~ 'Microsoft.Compute/disks' and properties.diskState == 'Unattached'`;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    context.res = {
+      status: 401,
+      body: "Missing or invalid Authorization header"
+    };
+    return;
+  }
 
-  const result = await client.resources({ query });
-  context.res = {
-    status: 200,
-    body: result.data,
-  };
+  const accessToken = authHeader.split(" ")[1];
+
+  try {
+    // Optional: decode token and inspect tenant/user info
+    const decoded = jwt.decode(accessToken);
+    context.log(`Token received for tenant: ${decoded.tid}, user: ${decoded.upn || decoded.preferred_username}`);
+
+    // Call Azure Resource Graph using user's access token
+    const response = await axios.post(
+      "https://management.azure.com/providers/Microsoft.ResourceGraph/resources?api-version=2021-03-01",
+      {
+        query: `
+          Resources
+          | where type =~ 'Microsoft.Compute/disks'
+          | where properties.diskState == 'Unattached'
+        `
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    context.res = {
+      status: 200,
+      body: response.data
+    };
+  } catch (error) {
+    context.log.error("Error querying Azure:", error.message);
+    context.res = {
+      status: 500,
+      body: `Error querying Azure: ${error.message}`
+    };
+  }
 };

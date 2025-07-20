@@ -7,7 +7,10 @@
     "build": "echo \"No build step\""
   },
   "dependencies": {
+    "axios": "^1.6.0",
+    "jsonwebtoken": "^9.0.0",
     "@azure/arm-resourcegraph": "^4.2.1",
-    "@azure/identity": "^4.0.0"
+    "@azure/identity": "^4.0.0",
+    "@azure/arm-resources": "^6.0.1"
   }
 }
