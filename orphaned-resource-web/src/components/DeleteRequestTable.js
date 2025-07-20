@@ -32,9 +32,9 @@ const DeleteRequestTable = ({ resources }) => {
 
       const token = tokenResponse.accessToken;
 
-      const res = await axios.post(
+      await axios.post(
         "https://orphaned-backend-func.azurewebsites.net/api/deleteOrphanedResources",
-        { resourceIds: selected }, // structure expected by backend
+        { resourceIds: selected },
         {
           headers: {
             Authorization: `Bearer ${token}`,
