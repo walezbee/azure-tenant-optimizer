@@ -26,7 +26,7 @@ const DeleteRequestTable = ({ resources }) => {
       const account = accounts[0];
 
       const tokenResponse = await instance.acquireTokenSilent({
-        scopes: ["https://management.azure.com/.default"],
+        scopes: ["https://management.azure.com/user_impersonation"],
         account,
       });
 
