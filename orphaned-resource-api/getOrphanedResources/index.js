@@ -14,6 +14,8 @@ class AccessTokenCredential {
   }
 }
 
+const axios = require("axios");
+
 module.exports = async function (context, req) {
   context.log("getOrphanedResources function invoked");
 
@@ -31,37 +33,42 @@ module.exports = async function (context, req) {
     const accessToken = authHeader.split(" ")[1];
     context.log("Received access token");
 
-    const credential = new AccessTokenCredential(accessToken);
+    // List subscriptions with user's token
+    const subsRes = await axios.get(
+      "https://management.azure.com/subscriptions?api-version=2020-01-01",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
 
-    // List all subscriptions for the user
-    const subscriptionClient = new SubscriptionClient(credential);
-    const subscriptions = [];
-    for await (const sub of subscriptionClient.subscriptions.list()) {
-      subscriptions.push(sub);
-    }
-
+    const subscriptions = subsRes.data.value;
     let allResources = [];
 
-    for (const subscription of subscriptions) {
-      const subClient = new ResourceManagementClient(credential, subscription.subscriptionId);
-      const resources = [];
-      for await (const resource of subClient.resources.list()) {
-        resources.push(resource);
-      }
-      allResources.push(...resources);
-    }
+    for (const sub of subscriptions) {
+      // List resources per subscription
+      const resourcesRes = await axios.get(
+        `https://management.azure.com/subscriptions/${sub.subscriptionId}/resources?api-version=2021-04-01`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-    // You can filter orphaned/deprecated resources here if needed
+      allResources.push(...resourcesRes.data.value);
+    }
 
     context.res = {
       status: 200,
       body: { data: allResources },
     };
   } catch (error) {
-    context.log.error("Error processing request:", error.message);
+    context.log.error("Error processing request:", error && error.response ? error.response.data : error);
     context.res = {
       status: 500,
-      body: { error: "Internal server error", details: error.message },
+      body: { error: "Internal server error", details: error && error.response ? error.response.data : error.message },
     };
   }
 };
