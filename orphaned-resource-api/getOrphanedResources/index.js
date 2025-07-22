@@ -30,18 +30,17 @@ module.exports = async function (context, req) {
       return;
     }
 
-    const accessToken = authHeader.split(" ")[1];
-    context.log("Access Token (first 50 chars):", accessToken.slice(0, 50));
+   const accessToken = req.headers["authorization"].split(" ")[1];
 
-    // Test ARM call
-    const subsRes = await axios.get(
-      "https://management.azure.com/subscriptions?api-version=2020-01-01",
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+// Example ARM REST call:
+const subsRes = await axios.get(
+  "https://management.azure.com/subscriptions?api-version=2020-01-01",
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  }
+);
 
     context.log("ARM response:", subsRes.data);
 
