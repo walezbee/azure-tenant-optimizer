@@ -9,47 +9,48 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handleLogin = () => {
-    instance.loginRedirect({
-      scopes: ["https://management.azure.com/.default"],
-    });
+// Update all scopes to use user_impersonation
+const handleLogin = () => {
+  instance.loginRedirect({
+    scopes: ["https://management.azure.com/user_impersonation"],
+  });
+};
+
+useEffect(() => {
+  if (accounts.length === 0) return;
+
+  const fetchResources = async () => {
+    try {
+      setLoading(true);
+      const account = accounts[0];
+
+      const response = await instance.acquireTokenSilent({
+        scopes: ["https://management.azure.com/user_impersonation"],
+        account: account,
+      });
+
+      const token = response.accessToken;
+
+      const res = await axios.get(
+        "https://orphaned-backend-func.azurewebsites.net/api/getOrphanedResources",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setResources(res.data.data);
+    } catch (err) {
+      console.error("Error fetching resources:", err);
+      setError("Failed to load resources.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => {
-    if (accounts.length === 0) return;
-
-    const fetchResources = async () => {
-      try {
-        setLoading(true);
-        const account = accounts[0];
-
-        const response = await instance.acquireTokenSilent({
-          scopes: ["https://management.azure.com/.default"],
-          account: account,
-        });
-
-        const token = response.accessToken;
-
-        const res = await axios.get(
-          "https://orphaned-backend-func.azurewebsites.net/api/getOrphanedResources",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setResources(res.data.data);
-      } catch (err) {
-        console.error("Error fetching resources:", err);
-        setError("Failed to load resources.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchResources();
-  }, [accounts, instance]);
+  fetchResources();
+}, [accounts, instance]);
 
   return (
     <div className="container mx-auto p-4">

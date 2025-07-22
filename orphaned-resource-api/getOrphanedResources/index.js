@@ -71,6 +71,7 @@ module.exports = async function (context, req) {
       status: error.response?.status,
       data: error.response?.data,
       headers: error.response?.headers,
+      message: error.message,
     });
     context.res = {
       status: error.response?.status || 500,
