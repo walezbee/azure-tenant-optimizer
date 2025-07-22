@@ -1,13 +1,11 @@
 const { ResourceManagementClient } = require("@azure/arm-resources");
-const { ClientSecretCredential, TokenCredential } = require("@azure/identity");
-const { DefaultAzureCredential } = require("@azure/identity");
-const { TokenCredentialAuthenticationProvider } = require("@azure/ms-rest-js");
+const { SubscriptionClient } = require("@azure/arm-subscriptions");
 
+// Credential wrapper for user token (compatible with Azure SDK)
 class AccessTokenCredential {
   constructor(token) {
     this.token = token;
   }
-
   getToken() {
     return Promise.resolve({
       token: this.token,
@@ -34,25 +32,26 @@ module.exports = async function (context, req) {
     context.log("Received access token");
 
     const credential = new AccessTokenCredential(accessToken);
-    const client = new ResourceManagementClient(credential, "<any-subscription-id>");
 
-    // Instead of hardcoding subscription, get all subscriptions the token has access to
-    const subscriptions = await client.subscriptions.list();
+    // List all subscriptions for the user
+    const subscriptionClient = new SubscriptionClient(credential);
+    const subscriptions = [];
+    for await (const sub of subscriptionClient.subscriptions.list()) {
+      subscriptions.push(sub);
+    }
 
     let allResources = [];
 
-    for await (const subscription of subscriptions) {
+    for (const subscription of subscriptions) {
       const subClient = new ResourceManagementClient(credential, subscription.subscriptionId);
       const resources = [];
-
       for await (const resource of subClient.resources.list()) {
         resources.push(resource);
       }
-
       allResources.push(...resources);
     }
 
-    // You can filter orphaned/deprecated resources later here
+    // You can filter orphaned/deprecated resources here if needed
 
     context.res = {
       status: 200,
