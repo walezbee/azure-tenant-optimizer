@@ -31,9 +31,9 @@ module.exports = async function (context, req) {
     }
 
     const accessToken = authHeader.split(" ")[1];
-    context.log("Received access token");
+    context.log("Access Token (first 50 chars):", accessToken.slice(0, 50));
 
-    // List subscriptions with user's token
+    // Test ARM call
     const subsRes = await axios.get(
       "https://management.azure.com/subscriptions?api-version=2020-01-01",
       {
@@ -42,6 +42,8 @@ module.exports = async function (context, req) {
         },
       }
     );
+
+    context.log("ARM response:", subsRes.data);
 
     const subscriptions = subsRes.data.value;
     let allResources = [];
@@ -65,10 +67,14 @@ module.exports = async function (context, req) {
       body: { data: allResources },
     };
   } catch (error) {
-    context.log.error("Error processing request:", error && error.response ? error.response.data : error);
+    context.log.error("Error processing request:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers,
+    });
     context.res = {
-      status: 500,
-      body: { error: "Internal server error", details: error && error.response ? error.response.data : error.message },
+      status: error.response?.status || 500,
+      body: { error: "Internal server error", details: error.response?.data || error.message },
     };
   }
 };
