@@ -1,19 +1,4 @@
-const { ResourceManagementClient } = require("@azure/arm-resources");
-const { SubscriptionClient } = require("@azure/arm-subscriptions");
-
-// Credential wrapper for user token (compatible with Azure SDK)
-class AccessTokenCredential {
-  constructor(token) {
-    this.token = token;
-  }
-  getToken() {
-    return Promise.resolve({
-      token: this.token,
-      expiresOnTimestamp: Date.now() + 60 * 60 * 1000,
-    });
-  }
-}
-
+// getOrphanedResources/index.js
 const axios = require("axios");
 
 module.exports = async function (context, req) {
@@ -22,7 +7,6 @@ module.exports = async function (context, req) {
   try {
     const authHeader = req.headers["authorization"] || "";
     if (!authHeader.startsWith("Bearer ")) {
-      context.log.error("Missing or invalid Authorization header.");
       context.res = {
         status: 400,
         body: { error: "Missing or invalid Authorization header" },
@@ -30,19 +14,17 @@ module.exports = async function (context, req) {
       return;
     }
 
-   const accessToken = req.headers["authorization"].split(" ")[1];
+    const accessToken = authHeader.split(" ")[1];
 
-// Example ARM REST call:
-const subsRes = await axios.get(
-  "https://management.azure.com/subscriptions?api-version=2020-01-01",
-  {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  }
-);
-
-    context.log("ARM response:", subsRes.data);
+    // Example: List subscriptions
+    const subsRes = await axios.get(
+      "https://management.azure.com/subscriptions?api-version=2020-01-01",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
 
     const subscriptions = subsRes.data.value;
     let allResources = [];
@@ -57,7 +39,6 @@ const subsRes = await axios.get(
           },
         }
       );
-
       allResources.push(...resourcesRes.data.value);
     }
 
@@ -66,12 +47,6 @@ const subsRes = await axios.get(
       body: { data: allResources },
     };
   } catch (error) {
-    context.log.error("Error processing request:", {
-      status: error.response?.status,
-      data: error.response?.data,
-      headers: error.response?.headers,
-      message: error.message,
-    });
     context.res = {
       status: error.response?.status || 500,
       body: { error: "Internal server error", details: error.response?.data || error.message },

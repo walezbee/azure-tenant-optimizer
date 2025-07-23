@@ -1,12 +1,13 @@
 {
+  "scriptFile": "index.js",
   "bindings": [
     {
       "authLevel": "function",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "options"],
-      "route": "getOrphanedResources"
+      "methods": [ "post" ],
+      "route": "deleteResources"
     },
     {
       "type": "http",

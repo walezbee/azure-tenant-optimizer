@@ -1,12 +1,13 @@
 {
+  "scriptFile": "index.js",
   "bindings": [
     {
       "authLevel": "function",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["post"],
-      "route": "DeleteResources"
+      "methods": [ "get", "post" ],
+      "route": "unattachedResources"
     },
     {
       "type": "http",
